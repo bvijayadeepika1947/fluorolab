@@ -30,6 +30,21 @@ p, li, label {color: #dce7ff;}
 }
 div[data-testid="stMetricValue"] {color:#67e8f9;}
 .stTabs [data-baseweb="tab"] {color:#dce7ff;}
+/* Keep Streamlit's native controls consistent with the dark project theme. */
+.stButton > button {
+    background: linear-gradient(100deg,#0891b2,#7c3aed) !important;
+    color: #ffffff !important; border: 1px solid #67e8f9 !important;
+    border-radius: 12px !important; font-weight: 700 !important;
+}
+.stButton > button:hover {border-color:#ffffff !important; color:#ffffff !important;}
+.stAlert, div[data-testid="stAlert"] {
+    background: rgba(18,35,72,.92) !important;
+    color: #e5efff !important; border: 1px solid #28558c !important;
+}
+.stAlert p, div[data-testid="stAlert"] p {color:#e5efff !important;}
+.stRadio label, .stRadio p {color:#e1eaff !important;}
+input[type="radio"] {accent-color:#22d3ee;}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -184,7 +199,7 @@ with tabs[0]:
     st.subheader("What is fluorescence?")
     st.write("Fluorescence is the emission of light by a substance after it absorbs light of a suitable wavelength.")
     fluorescence_animation()
-    st.info("Watch the yellow excitation photon enter, the molecule absorb energy, and the cyan fluorescence photon leave.")
+    st.caption("Watch the yellow excitation photon enter, the molecule absorb energy, and the cyan fluorescence photon leave.")
 
 with tabs[1]:
     st.subheader("The four stages of fluorescence")
@@ -254,29 +269,41 @@ with tabs[4]:
 
 with tabs[5]:
     st.subheader("Test your understanding")
+    st.write("15 questions · 1 mark each · Choose one answer for every question.")
     questions = [
-        ("What happens first in fluorescence?", ["Emission of light", "Absorption of a photon", "Molecule disappears"], 1,
-         "The molecule first absorbs an incoming photon."),
-        ("Fluorescence emission usually has:", ["Longer wavelength", "Shorter wavelength", "Exactly the same wavelength"], 0,
-         "The emitted photon usually has lower energy and a longer wavelength."),
-        ("What does Stokes shift compare?", ["Two intensities", "Emission and excitation wavelengths", "Two temperatures"], 1,
-         "Stokes shift is emission wavelength minus excitation wavelength.")
+        ("What happens first in fluorescence?", ["Emission of light", "Absorption of a photon", "Molecule disappears", "Formation of a precipitate"], 1, "A molecule must absorb incoming light before it can fluoresce."),
+        ("Fluorescence emission usually has:", ["A longer wavelength", "A shorter wavelength", "Exactly the same wavelength", "No wavelength"], 0, "The emitted photon usually has lower energy and therefore a longer wavelength."),
+        ("Stokes shift compares:", ["Two intensities", "Emission and excitation wavelengths", "Two temperatures", "Two concentrations"], 1, "Stokes shift is the difference between emission and excitation wavelengths."),
+        ("The ground electronic state is commonly represented as:", ["S₀", "S₁", "T₁", "S₂"], 0, "S₀ denotes the ground singlet electronic state."),
+        ("After absorbing light, a molecule is promoted to an:", ["Excited state", "Ionic solid", "Unchanged state", "Isolated nucleus"], 0, "Absorption promotes the molecule from a lower to a higher electronic energy state."),
+        ("Fluorescence commonly occurs when a molecule returns from:", ["S₁ to S₀", "S₀ to S₁ by emission", "T₁ to T₂ only", "S₀ to a nucleus"], 0, "Fluorescence is commonly emission from an excited singlet state to a lower singlet state."),
+        ("Non-radiative relaxation means energy is lost:", ["Without emitting a photon", "Only as visible light", "By creating a new atom", "By increasing wavelength to infinity"], 0, "Non-radiative processes transfer energy without light emission, often into molecular motion and heat."),
+        ("Which photon generally has greater energy?", ["Excitation photon", "Emission photon", "Both always have equal energy", "Neither has energy"], 0, "The excitation photon generally has higher energy because its wavelength is shorter."),
+        ("The SI unit of wavelength is:", ["Metre", "Joule", "Watt", "Kelvin"], 0, "Wavelength is a length and its SI unit is the metre; nanometres are commonly used for light."),
+        ("The relation between photon energy and wavelength is:", ["E = hc/λ", "E = hλ/c", "E = mc²λ", "E = λ/hc"], 0, "Photon energy is Planck's constant times the speed of light divided by wavelength."),
+        ("If excitation is 365 nm and emission is 450 nm, the Stokes shift is:", ["85 nm", "815 nm", "−85 nm", "450 nm"], 0, "450 nm − 365 nm = 85 nm."),
+        ("A fluorescence spectrum commonly plots intensity against:", ["Wavelength", "Mass only", "Time only", "Pressure only"], 0, "A spectrum shows how fluorescence intensity varies with wavelength."),
+        ("Which instrument technique uses emitted fluorescence to observe labelled cells?", ["Fluorescence microscopy", "Titration only", "Simple filtration", "Distillation"], 0, "Fluorescence microscopy uses fluorescent signals to make selected cell structures visible."),
+        ("A fluorophore is a substance or molecular group that:", ["Can fluoresce", "Always absorbs no light", "Cannot be excited", "Only emits sound"], 0, "A fluorophore is a fluorescent molecule or part of a molecule."),
+        ("The curves in this project's simulator are:", ["Illustrative model curves", "Experimental measurements from a real sample", "Universal spectra for every molecule", "Proof of a specific chemical identity"], 0, "The app uses illustrative Gaussian curves for learning; they are not measured experimental data.")
     ]
-    score = 0
     answers = []
-    for i,(q,opts,correct,why) in enumerate(questions):
-        ans = st.radio(q, opts, key=f"quiz_{i}")
-        answers.append((ans,correct,why))
-    if st.button("Check my answers"):
-        for i,(ans,correct,why) in enumerate(answers):
-            chosen = questions[i][1].index(ans)
-            if chosen == correct:
-                score += 1
-                st.success(f"Q{i+1}: Correct! {why}")
-            else:
-                st.error(f"Q{i+1}: Not quite. {why}")
-        st.metric("Your score", f"{score}/3")
+    for i, (q, opts, correct, explanation) in enumerate(questions):
+        answer = st.radio(f"Q{i+1}. {q}", opts, key=f"quiz_final_{i}", index=None)
+        answers.append((answer, opts, correct, explanation))
+    if st.button("Submit quiz and see score", key="submit_final_quiz"):
+        unanswered = [str(i+1) for i, item in enumerate(answers) if item[0] is None]
+        if unanswered:
+            st.warning("Please answer all questions before submitting. Unanswered: " + ", ".join(unanswered))
+        else:
+            score = sum(1 for answer, opts, correct, explanation in answers if opts.index(answer) == correct)
+            st.success(f"Your score: {score}/15")
+            st.write("Review your answers:")
+            for i, (answer, opts, correct, explanation) in enumerate(answers):
+                if opts.index(answer) == correct:
+                    st.markdown(f"**Q{i+1}: Correct** — {explanation}")
+                else:
+                    st.markdown(f"**Q{i+1}: Incorrect. Correct answer: {opts[correct]}.** {explanation}")
 
 st.divider()
 st.caption("🔬 FluoroLab 2.0 | Engineering Chemistry | Unit II | Educational simulation")
-    
